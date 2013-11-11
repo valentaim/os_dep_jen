@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-commit_hash="33c771c2ebe4b4c03d50e62fadfc5f0445cead9b"
-cookbooks_repo_path="./chef-cookbooks"
-vg_name="raid1"
-lv_snap_size="10G"
-chef_hostname="chef.wd.com"
-chef_ipaddr="10.0.104.2"
-chef_client_rpm="./distr/chef-11.8.0-1.el6.x86_64.rpm"
-env_file="./wdm_ha.json"
-env_name="wdm_ha"
-def_gw="192.168.122.1"
-yum_proxy="http://10.0.104.1:3128"
-http_proxy="http://10.0.104.1:3128"
-https_proxy="http://10.0.104.1:3128"
+: ${commit_hash:="33c771c2ebe4b4c03d50e62fadfc5f0445cead9b"}
+: ${cookbooks_repo_path:="./chef-cookbooks"}
+: ${vg_name:="raid1"}
+: ${lv_snap_size:="10G"}
+: ${chef_hostname:="chef.wd.com"}
+: ${chef_ipaddr:="10.0.104.2"}
+: ${chef_client_rpm:="./distr/chef-11.8.0-1.el6.x86_64.rpm"}
+: ${env_file:="./wdm_ha.json"}
+: ${env_name:="wdm_ha"}
+: ${def_gw:="192.168.122.1"}
+: ${yum_proxy:="http://10.0.104.1:3128"}
+: ${http_proxy:="http://10.0.104.1:3128"}
+: ${https_proxy:="http://10.0.104.1:3128"}
 
 echo "Switching to specified commit $commit_hash"
 #===========
