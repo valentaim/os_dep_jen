@@ -1,0 +1,70 @@
+{
+  "name": "wdm_ha",
+  "description": "WDM test environment",
+  "cookbook_versions": {
+  },
+  "json_class": "Chef::Environment",
+  "chef_type": "environment",
+  "default_attributes": {
+  },
+  "override_attributes": {
+    "developer_mode": true,
+    "monitoring" : {
+      "metric_provider" : "collectd",
+      "procmon_provider" : "monit"
+    },
+    "glance": {
+      "image_upload": true,
+      "images": ["cirros"]
+    },
+    "nova": {
+      "ratelimit" : {
+        "api" : { "enabled" : true },
+        "volume" : { "enabled" : true }
+      },
+      "libvirt": { "virt_type": "qemu" },
+      "networks": {
+        "public": {
+            "label": "public",
+            "ipv4_cidr": "10.10.100.0/24",
+            "bridge": "br100",
+            "bridge_dev": "eth0",
+            "dns1": "8.8.8.8",
+            "dns2": "8.8.4.4"
+        }
+      }
+    },
+    "vips": {
+      "rabbitmq-queue": "10.0.100.100",
+      "horizon-dash": "10.0.100.100",
+      "horizon-dash_ssl": "10.0.100.100",
+      "keystone-service-api": "10.0.100.100",
+      "keystone-admin-api": "10.0.100.100",
+      "keystone-internal-api": "10.0.100.100",
+      "nova-xvpvnc-proxy": "10.0.100.100",
+      "nova-api": "10.0.100.100",
+      "nova-ec2-public": "10.0.100.100",
+      "nova-novnc-proxy": "10.0.100.100",
+      "cinder-api": "10.0.100.100",
+      "glance-api": "10.0.100.100",
+      "glance-registry": "10.0.100.100",
+      "swift-proxy": "10.0.100.100",
+      "mysql-db": "10.0.100.100",
+      "config": {
+        "10.0.100.100": {
+          "vrid": 11,
+          "network": "public"
+        }
+      }
+    },
+    "mysql": {
+      "allow_remote_root": true,
+      "root_network_acl": "%"
+    },
+    "osops_networks": {
+      "nova": "10.0.100.0/24",
+      "public": "10.0.100.0/24",
+      "management": "10.0.100.0/24"
+    }
+  }
+}
