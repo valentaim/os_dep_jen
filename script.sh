@@ -104,7 +104,7 @@ echo \"export https_proxy\" >> /root/.bash_profile;
   knife client delete ${name} -y
   knife node delete ${name} -y
   echo "Bootstrap node ${sname} with role"
-  knife bootstrap ${eth1_ip} -x root -E${env_name}
+  knife bootstrap ${eth1_ip} -x root -E${env_name} -i${ssh_key}
   echo "Assign role to ${sname}"
   knife node run_list add ${name} ${role}
 } </dev/null; done # this is ssh trick
