@@ -110,10 +110,10 @@ echo \"export https_proxy\" >> /root/.bash_profile;
 } </dev/null; done # this is ssh trick
 
 echo "Deploying first controller"
-knife ssh 'role:ha-controller1' chef-client -x root -i${ssh_key}
+knife ssh "chef_environment:${env_name} AND role:ha-controller1" chef-client -x root -i${ssh_key}
 echo "Deploying second controller"
-knife ssh 'role:ha-controller2' chef-client -x root -i${ssh_key}
+knife ssh "chef_environment:${env_name} AND role:ha-controller2" chef-client -x root -i${ssh_key}
 echo "ReDeploying first controller"
-knife ssh 'role:ha-controller1' chef-client -x root -i${ssh_key}
+knife ssh "chef_environment:${env_name} AND role:ha-controller1" chef-client -x root -i${ssh_key}
 echo "Deploying compute nodes"
-knife ssh 'role:single-compute' chef-client -x root -i${ssh_key}
+knife ssh "chef_environment:${env_name} AND role:single-compute" chef-client -x root -i${ssh_key}
