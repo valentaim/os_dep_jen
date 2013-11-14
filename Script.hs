@@ -25,17 +25,29 @@ import Control.Concurrent
 import Control.Exception
 default (T.Text)
 
-scriptRoot = "/home/scor/work/dev/gvnkd/os_dep_jen"
-cookbookPath = "/tmp/script/chef-cookbooks"
+--scriptRoot = "/home/scor/work/dev/gvnkd/os_dep_jen"
+scriptRoot = "./"
+--cookbookPath = "/tmp/script/chef-cookbooks"
+cookbookPath = "./chef-cookbooks"
 commit = "33c771c2ebe4b4c03d50e62fadfc5f0445cead9b"
-vgName = "raid1"
+--vgName = "raid1"
+vgName = "system"
+defGw  = "10.0.100.1"
+httpProxy = "http://10.0.104.1:3128"
+httpsProxy = httpProxy
+yumProxy = httpProxy
 vmsList = scriptRoot </> "vms.list"
 xmlPath = "/tmp/"
-snapSize = "1G"
+snapSize = "10G"
 dhcpLeases = "/var/lib/libvirt/dnsmasq/default.leases"
 chefAddr = "10.0.104.2"
 chefHost = "chef.wd.com"
-
+sshKey = "/root/.ssh/id_rsa"
+chefClientRpmName = "chef-11.8.0-1.el6.x86_64.rpm"
+chefClientRpmLocation = "./distr"
+chefClientRpm = T.concat[chefClientRpmLocation,"/",chefClientRpmName]
+envName = "wdm_ha"
+envFile = "./wdm_ha.json"
 --dhcpLeases = "/tmp/bebebe"
 
 data VM = VM{ instName  :: Text
@@ -113,16 +125,47 @@ restartVM vm = shelly $ do
     liftIO $ waitForSSH ip m
     liftIO $ takeMVar m
     echo "connect to SSH"
-    let cmds = T.concat ["echo \"",chefAddr, "\t",chefHost,"\" >> /etc/hosts;"
-                        ,"echo \"","10.0.104.",lastOctet vm,"\t",instName vm,"\" >> /etc/hosts;"
-                        ]
+    let cmds = T.concat
+               ["echo \"",chefAddr, "\t",chefHost,"\" >> /etc/hosts;"
+               ,"echo \"","10.0.104.",lastOctet vm,"\t",instName vm,"\" >> /etc/hosts;"
+               ,"sed ","-i ","'s/HOSTNAME=.*/HOSTNAME=",instName vm,"/' /etc/sysconfig/network;"
+               ,"hostname ",instName vm,";"
+               ,"echo \"GATEWAY=",defGw,"\" >> /etc/sysconfig/network;"
+               ,"echo -en \"DEVICE=eth0\nTYPE=Ethernet\nONBOOT=yes\nNM_CONTROLLED=yes\nBOOTPROTO=none\" > /etc/sysconfig/network-scripts/ifcfg-eth1;"
+               ,"echo -en \"VLAN=yes\nDEVICE=eth1.100\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.100.",lastOctet vm,"\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-eth1.100;"
+               ,"echo -en \"VLAN=yes\nDEVICE=eth1.101\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.101.",lastOctet vm,"\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-eth1.101;"
+               ,"echo -en \"VLAN=yes\nDEVICE=eth1.102\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.102.",lastOctet vm,"\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-eth1.102;"
+               ,"echo -en \"VLAN=yes\nDEVICE=eth1.103\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.103.",lastOctet vm,"\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-eth1.103;"
+               ,"echo -en \"VLAN=yes\nDEVICE=eth1.104\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.104.",lastOctet vm,"\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-eth1.104;"
+               ,"rm ","-f ","/etc/sysconfig/network-scripts/ifcfg-eth0*;"
+               ,"echo -en \"DEVICE=eth0\nTYPE=Ethernet\nONBOOT=yes\nNM_CONTROLLED=yes\nBOOTPROTO=dhcp\n\" > /etc/sysconfig/network-scripts/ifcfg-eth0;"
+               ,"service network restart;"
+               ,"echo \"proxy=",yumProxy,"\" >> /etc/yum.conf;"
+               ,"echo \"http_proxy=",httpProxy,"\" >> /root/.bash_profile;"
+               ,"echo \"https_proxy=",httpsProxy,"\" >> /root/.bash_profile;"
+               ,"echo \"export http_proxy\" >> /root/.bash_profile;"
+               ,"echo \"export https_proxy\" >> /root/.bash_profile;"
+               ,"rpm -Uvhi ", T.concat["/tmp/",chefClientRpmName], ";"
+--               ,"yum install openssh-clients;"
+               ]
+                                                     
 --    sshPairs ip [("echo",[chefAddr, "\t\t", chefHost, ">", "/etc/hosts"])]
 --    sshPairs ip [cmds]
+    scp chefClientRpm ip "/tmp/"
     ssh ip cmds
+
+    escaping False $ sudo_run_ "sed" ["-i ",T.concat ["\"/.*",instName vm,"/d\""]," /etc/hosts"]
+    run "echo" [T.concat [ip,"  ",instName vm]] -|- run_ "tee" ["-a","/etc/hosts"]
+    run_ "knife" ["client", "delete", instName vm, "-y"]
+    run_ "knife" ["node", "delete", instName vm, "-y"]
+    run_ "knife" ["bootstrap",ip,"-x","root","-E",envName,"-r","role[base]","-i",sshKey]
+    run "knife" ["node","run_list","add", instName vm, nodeRole vm]
     
   where
-    ssh addr cmd = run "ssh" $ [addr, cmd]
-    
+    ssh addr cmd = run "ssh" $ opts ++ [addr, cmd]
+      where opts = ["-i",sshKey,"-l","root","-o","StrictHostKeyChecking=no","-o","UserKnownHostsFile=/dev/null"]
+
+    scp from addr to = run "scp" ["-i",sshKey,"-o","StrictHostKeyChecking=no","-o","UserKnownHostsFile=/dev/null","-o","User=root",from, T.concat [addr,":",to]]
     getMac vm = shelly $ silently $ do
       xml <- sudo_run "virsh" ["dumpxml", instName vm]
       let doc  = X.parseText_ X.def $ TL.fromStrict xml
@@ -166,8 +209,19 @@ restartVM vm = shelly $ do
     failIsOk cmd = catchany_sh cmd $ \_ -> echo "safe fail"
 
 
+waitForSolr :: Text -> Sh ()
+waitForSolr req = shelly $ do
+  res <- run "knife" ["search", "node", req]
+  liftIO $ threadDelay (2 * 1000000)
+  if isInfixOf "0 items found" res
+    then waitForSolr req
+    else return ()
+
 test = shelly $ verbosely $ do
 --  gitCheckout commit
+  echo "update chef-server"
+  run_ "knife" ["environment", "from", "file", envFile]
+  escaping False $ run_ "knife" ["role", "from", "file", T.concat [cookbookPath,"/roles/*.rb"]]
   res <- readfile vmsList
   let vms = vmsFromFile res
   forM_ vms $ \vm -> do
@@ -177,6 +231,19 @@ test = shelly $ verbosely $ do
 
   echo "Wait for all vms"    
   liftIO $ waitForChildren
+  waitForSolr $ T.concat ["chef_environment:", envName, " AND role:ha-controller1"]
+  escaping False $
+    run_ "knife" ["ssh"
+                 ,T.concat ["\"chef_environment:",envName," AND role:ha-controller1\""]
+                 ,"chef-client", "-x", "root", "-i", sshKey]
+  escaping False $
+    run_ "knife" ["ssh"
+                 ,T.concat ["\"chef_environment:",envName," AND (role:ha-controller2 OR role:single-compute)\""]
+                 ,"chef-client", "-x", "root", "-i", sshKey]
+  escaping False $
+    run_ "knife" ["ssh"
+                 ,T.concat ["\"chef_environment:",envName," AND role:ha-controller1\""]
+                 ,"chef-client", "-x", "root", "-i", sshKey]
   echo "Done!"
 
 vmsFromFile :: Text -> [VM]
@@ -221,3 +288,6 @@ toInstDef vm = shelly $ do
         ivol  = toTextIgnore $ "/dev" </> vgName </> iname
         transform (X.Element name attrs children) =
           X.Element name attrs children
+
+
+main = test

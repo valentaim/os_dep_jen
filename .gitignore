@@ -3,3 +3,6 @@ distr/*
 *#
 *.swp
 chef-cookbooks/
+*.hi
+*.o
+.shelly/*

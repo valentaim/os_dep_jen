@@ -1,12 +1,12 @@
 <domain type='kvm' id='6'>
   <name>node_name</name>
-  <memory unit='KiB'>10485760</memory>
+  <memory unit='KiB'>1048576</memory>
   <vcpu placement='static'>4</vcpu>
   <resource>
     <partition>/machine</partition>
   </resource>
   <os>
-    <type arch='x86_64' machine='pc-i440fx-1.5'>hvm</type>
+    <type arch='x86_64' machine='pc'>hvm</type>
     <boot dev='hd'/>
   </os>
   <features>
@@ -38,23 +38,20 @@
       <alias name='usb0'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x2'/>
     </controller>
-    <controller type='pci' index='0' model='pci-root'>
-      <alias name='pci0'/>
-    </controller>
     <controller type='ide' index='0'>
       <alias name='ide0'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
     </controller>
-    <interface type='bridge'>
-      <source bridge='br333'/>
-      <target dev='vnet6'/>
+    <interface type='network'>
+      <source network='default'/>
+      <target dev='vnet7'/>
       <model type='virtio'/>
       <alias name='net0'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
     </interface>
-    <interface type='network'>
-      <source network='default'/>
-      <target dev='vnet7'/>
+    <interface type='bridge'>
+      <source bridge='br333'/>
+      <target dev='vnet6'/>
       <model type='virtio'/>
       <alias name='net1'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
