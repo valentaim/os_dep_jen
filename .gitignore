@@ -1,6 +1,7 @@
 *~
 distr/*
 *#
+.#*
 *.swp
 chef-cookbooks/
 *.hi
