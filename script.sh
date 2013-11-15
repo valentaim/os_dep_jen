@@ -14,8 +14,8 @@
 : ${http_proxy:="http://10.0.104.1:3128"}
 : ${https_proxy:="http://10.0.104.1:3128"}
 : ${ssh_key:="~/.ssh/id_rsa"}
-: ${ext_if:="${int_if}"}
-: ${int_if:="eth1"}
+: ${ext_if:="eth1"}
+: ${int_if:="eth0"}
 
 echo "Switching to specified commit $commit_hash"
 #===========
