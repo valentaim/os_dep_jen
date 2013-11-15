@@ -125,6 +125,7 @@ restartVM vm = shelly $ do
     liftIO $ waitForSSH ip m
     liftIO $ takeMVar m
     echo "connect to SSH"
+{--
     let cmds = T.concat
                ["echo \"",chefAddr, "\t",chefHost,"\" >> /etc/hosts;"
                ,"echo \"","10.0.104.",lastOctet vm,"\t",instName vm,"\" >> /etc/hosts;"
@@ -148,9 +149,7 @@ restartVM vm = shelly $ do
                ,"rpm -Uvhi ", T.concat["/tmp/",chefClientRpmName], ";"
 --               ,"yum install openssh-clients;"
                ]
-                                                     
---    sshPairs ip [("echo",[chefAddr, "\t\t", chefHost, ">", "/etc/hosts"])]
---    sshPairs ip [cmds]
+--}                                                  
     scp chefClientRpm ip "/tmp/"
     ssh ip cmds
 
@@ -158,7 +157,12 @@ restartVM vm = shelly $ do
     run "echo" [T.concat [ip,"  ",instName vm]] -|- run_ "tee" ["-a","/etc/hosts"]
     run_ "knife" ["client", "delete", instName vm, "-y"]
     run_ "knife" ["node", "delete", instName vm, "-y"]
-    run_ "knife" ["bootstrap",ip,"-x","root","-E",envName,"-r","role[base]","-i",sshKey]
+    let roles = if isInfixOf "controller" (nodeRole vm)
+                then T.concat ["role[base]",",","recipe[build-essential]"]
+                else "role[base]"
+    run_ "knife" ["bootstrap",ip,"-x","root","-E",envName,"-r",roles,"-i",sshKey]
+
+
     run "knife" ["node","run_list","add", instName vm, nodeRole vm]
     
   where
@@ -206,8 +210,8 @@ restartVM vm = shelly $ do
       echo $ toTextIgnore p
     sudo_run_ cmd args = run_ "sudo" (cmd:args)
     sudo_run  cmd args = run  "sudo" (cmd:args)
-    failIsOk cmd = catchany_sh cmd $ \_ -> echo "safe fail"
 
+failIsOk cmd = catchany_sh cmd $ \_ -> echo "safe fail"
 
 waitForSolr :: Text -> Sh ()
 waitForSolr req = shelly $ do
@@ -240,10 +244,15 @@ test = shelly $ verbosely $ do
     run_ "knife" ["ssh"
                  ,T.concat ["\"chef_environment:",envName," AND (role:ha-controller2 OR role:single-compute)\""]
                  ,"chef-client", "-x", "root", "-i", sshKey]
-  escaping False $
+  catchany_sh (escaping False $
     run_ "knife" ["ssh"
                  ,T.concat ["\"chef_environment:",envName," AND role:ha-controller1\""]
-                 ,"chef-client", "-x", "root", "-i", sshKey]
+                 ,"chef-client", "-x", "root", "-i", sshKey])
+    (\_ -> escaping False $
+           run_ "knife" ["ssh"
+                        ,T.concat ["\"chef_environment:",envName," AND role:ha-controller1\""]
+                        ,"chef-client", "-x", "root", "-i", sshKey])
+
   echo "Done!"
 
 vmsFromFile :: Text -> [VM]
