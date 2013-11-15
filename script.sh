@@ -14,6 +14,8 @@
 : ${http_proxy:="http://10.0.104.1:3128"}
 : ${https_proxy:="http://10.0.104.1:3128"}
 : ${ssh_key:="~/.ssh/id_rsa"}
+: ${ext_if:="${int_if}"}
+: ${int_if:="eth1"}
 
 echo "Switching to specified commit $commit_hash"
 #===========
@@ -81,12 +83,12 @@ echo \"10.0.104.${last_octet}  ${name}\" >> /etc/hosts;
 sed -i 's/HOSTNAME=.*/HOSTNAME=${name}/' /etc/sysconfig/network;
 hostname ${name};
 echo \"GATEWAY=${def_gw}\" >> /etc/sysconfig/network;
-echo -en \"DEVICE=eth0\nTYPE=Ethernet\nONBOOT=yes\nNM_CONTROLLED=yes\nBOOTPROTO=none\" > /etc/sysconfig/network-scripts/ifcfg-eth0;
-echo -en \"VLAN=yes\nDEVICE=eth0.100\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.100.${last_octet}\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-eth0.100;
-echo -en \"VLAN=yes\nDEVICE=eth0.101\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.101.${last_octet}\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-eth0.101;
-echo -en \"VLAN=yes\nDEVICE=eth0.102\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.102.${last_octet}\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-eth0.102;
-echo -en \"VLAN=yes\nDEVICE=eth0.103\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.103.${last_octet}\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-eth0.103;
-echo -en \"VLAN=yes\nDEVICE=eth0.104\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.104.${last_octet}\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-eth0.104;
+echo -en \"DEVICE=${int_if}\nTYPE=Ethernet\nONBOOT=yes\nNM_CONTROLLED=yes\nBOOTPROTO=none\" > /etc/sysconfig/network-scripts/ifcfg-${int_if};
+echo -en \"VLAN=yes\nDEVICE=${int_if}.100\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.100.${last_octet}\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-${int_if}.100;
+echo -en \"VLAN=yes\nDEVICE=${int_if}.101\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.101.${last_octet}\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-${int_if}.101;
+echo -en \"VLAN=yes\nDEVICE=${int_if}.102\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.102.${last_octet}\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-${int_if}.102;
+echo -en \"VLAN=yes\nDEVICE=${int_if}.103\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.103.${last_octet}\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-${int_if}.103;
+echo -en \"VLAN=yes\nDEVICE=${int_if}.104\nTYPE=Ethernet\nONBOOT=yes\nIPADDR=10.0.104.${last_octet}\nNETMASK=255.255.255.0\" > /etc/sysconfig/network-scripts/ifcfg-${int_if}.104;
 service network restart;
 echo \"proxy=${yum_proxy}\" >> /etc/yum.conf;
 echo \"http_proxy=${http_proxy}\" >> /root/.bash_profile;
