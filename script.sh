@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-: ${commit_hash:="33c771c2ebe4b4c03d50e62fadfc5f0445cead9b"}
+: ${branch_name:="wdm"}
 : ${cookbooks_repo_path:="./chef-cookbooks"}
 : ${vg_name:="raid1"}
 : ${lv_snap_size:="10G"}
@@ -21,7 +21,7 @@ echo "Switching to specified commit $commit_hash"
 #===========
 cd $cookbooks_repo_path \
 && git pull origin wdm && \
-git checkout $commit_hash && \
+git checkout $branch_name && \
 git submodule init && \
 git submodule sync && \
 git submodule update && \
@@ -50,11 +50,8 @@ echo "Update chef server configuration"
 echo "Upload env and roles"
 knife environment from file ${env_file}
 knife role from file chef-cookbooks/roles/*.rb
-echo "Delete cookbooks"
-#knife cookbook bulk delete '.*' -y
 echo "Upload cookbooks"
 knife cookbook upload -a
-
 
 echo "configure nodes via chef"
 cat ./vms.list | grep -vP '^#.*' | while read name last_octet role inst_tmpl vol_tmpl ; do {
