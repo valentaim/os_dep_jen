@@ -1,6 +1,6 @@
 <domain type='kvm' id='6'>
   <name>node_name</name>
-  <memory unit='KiB'>1048576</memory>
+  <memory unit='KiB'>10485760</memory>
   <vcpu placement='static'>4</vcpu>
   <resource>
     <partition>/machine</partition>
