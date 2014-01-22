@@ -1,6 +1,6 @@
 #  insName   last octet    node role              instTemplate     Volume template
 #--------------------------------------------------------------------------------------------------
-ctrl1.wd.com   10       role[ha-controller1]      ctrl.xml        wd-node.template
+ctrl1.wd.com   10      role[ha-controller1]      ctrl.xml        wd-node.template
 ctrl2.wd.com   11      role[ha-controller2]      ctrl.xml        wd-node.template
 ctrl3.wd.com   12      role[ha-controller2]      ctrl.xml        wd-node.template
 comp1.wd.com   13      role[single-compute]      comp.xml        wd-node.template
