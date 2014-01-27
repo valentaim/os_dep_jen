@@ -55,6 +55,9 @@ cat ./vms.list | grep -vP '^#.*' | while read name last_octet role inst_tmpl vol
   echo "${eth1_ip}    ${name}" | sudo tee -a /etc/hosts
 
   echo "Configure ${sname}"
+  chef_config="
+echo \"Chef::Config[:no_lazy_load] = true\" >> /etc/chef/client.rb;
+"
   node_config="
 echo \"${chef_ipaddr}  ${chef_hostname}\" >> /etc/hosts;
 echo \"10.0.104.${last_octet}  ${name}\" >> /etc/hosts;
@@ -87,4 +90,5 @@ echo \"export https_proxy\" >> /root/.bash_profile;
   knife bootstrap ${eth1_ip} -x root -E${env_name} -i${ssh_key}
   echo "Assign role to ${sname}"
   knife node run_list add ${name} ${role}
+  ssh -n -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${eth1_ip} ${chef_config}
 } </dev/null; done # this is ssh trick
